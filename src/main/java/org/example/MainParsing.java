@@ -5,16 +5,22 @@ import org.example.model.Root;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainParsing {
+
+    private static final String TAG_NAME_MAIN = "name";
+    private static final String TAG_PEOPLE = "people";
+    private static final String TAG_ELEMENT = "element";
+    private static final String TAG_NAME = "name";
+    private static final String TAG_AGE = "age";
+
+
+
     public static void main(String[] args) {
 
         Root root = new Root();
@@ -42,12 +48,12 @@ public class MainParsing {
 
            System.out.println("2 " + rootChilds.item(i).getNodeName());
             switch (rootChilds.item(i).getNodeName()){
-                case "name": {
+                case TAG_NAME_MAIN: {
                     mainName = rootChilds.item(i).getTextContent();
                     System.out.println("mainName " + mainName);
                     break;
                 }
-                case "people": {
+                case TAG_PEOPLE: {
                     peopleNode = rootChilds.item(i);
                     break;
                 }
@@ -60,40 +66,7 @@ public class MainParsing {
             return;
         }
 
-        List<People> peopleList = new ArrayList<People>();
-        NodeList peopleChilds = peopleNode.getChildNodes();
-        for (int i = 0; i < peopleChilds.getLength(); i++) {
-
-            if (peopleChilds.item(i).getNodeType() != Node.ELEMENT_NODE){
-                continue;
-            }
-            if (!peopleChilds.item(i).getNodeName().equals("element")){
-                continue;
-            }
-
-            String name = "";
-            int age = 0;
-
-            NodeList elementChilds = peopleChilds.item(i).getChildNodes();
-            for (int j = 0; j < elementChilds.getLength(); j++) {
-                if (elementChilds.item(j).getNodeType() != Node.ELEMENT_NODE){
-                    continue;
-                }
-
-                switch (elementChilds.item(j).getNodeName()){
-                    case "name": {
-                        name = elementChilds.item(j).getTextContent();
-                        break;
-                    }
-                    case "age": {
-                        age = Integer.valueOf(elementChilds.item(j).getTextContent());
-                        break;
-                    }
-                }
-            }
-            People people = new People(name, age);
-            peopleList.add(people);
-        }
+        List<People> peopleList = parsPeople(peopleNode);
 
         root.setName(mainName);
         root.setPeople(peopleList);
@@ -111,5 +84,48 @@ public class MainParsing {
         File file = new File("Test.xml");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         return dbf.newDocumentBuilder().parse(file);
+    }
+
+    private static List<People> parsPeople(Node peopleNode){
+        List<People> peopleList = new ArrayList<People>();
+        NodeList peopleChilds = peopleNode.getChildNodes();
+        for (int i = 0; i < peopleChilds.getLength(); i++) {
+
+            if (peopleChilds.item(i).getNodeType() != Node.ELEMENT_NODE){
+                continue;
+            }
+            if (!peopleChilds.item(i).getNodeName().equals(TAG_ELEMENT)){
+                continue;
+            }
+
+            People people = parsElement(peopleChilds.item(i));
+
+            peopleList.add(people);
+        }
+        return peopleList;
+    }
+
+    private static People parsElement(Node elementNode){
+        String name = "";
+        int age = 0;
+        NodeList elementChilds = elementNode.getChildNodes();
+        for (int j = 0; j < elementChilds.getLength(); j++) {
+            if (elementChilds.item(j).getNodeType() != Node.ELEMENT_NODE){
+                continue;
+            }
+
+            switch (elementChilds.item(j).getNodeName()){
+                case TAG_NAME: {
+                    name = elementChilds.item(j).getTextContent();
+                    break;
+                }
+                case TAG_AGE: {
+                    age = Integer.valueOf(elementChilds.item(j).getTextContent());
+                    break;
+                }
+            }
+        }
+        People people = new People(name, age);
+        return people;
     }
 }
